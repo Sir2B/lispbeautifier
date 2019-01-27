@@ -14,10 +14,21 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"languages": [
+            {
+				"id": "lisp",
+				"aliases": ["Lisp", "lisp"],
+		  		"extensions": [".lisp", ".cl", ".asd", ".ros", ".lsp", ".el"]
+            }
+		],
 		"commands": [
 			{
 				"command": "extension.helloWorld",
 				"title": "Hello World"
+			},
+			{
+				"command": "extension.formatlisp",
+				"title": "Format Lisp"
 			}
 		]
 	},
