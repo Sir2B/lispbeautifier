@@ -22,6 +22,10 @@ export class LispFormatter implements DocumentFormattingEditProvider {
         let openLists = 0;
         let result = "";
         let newLine = true;
+        let inArray = false;
+        let commentActive = false;
+        let stringActive = false;
+        let charEscaped = false;
 
         let newLineString = document.eol === EndOfLine.CRLF ? "\r\n" : "\n";
 
@@ -35,28 +39,68 @@ export class LispFormatter implements DocumentFormattingEditProvider {
         for (var i = 0; i < text.length; i++) {
             switch (text.charAt(i)) {
                 case '(':
-                    if (!newLine) {
-                        result += newLineString;
+                    if (charEscaped) {
+                        charEscaped = false;
                     }
-                    result += indentString.repeat(openLists) + text.charAt(i);
-                    openLists += 1;
-                    newLine = false;
+                    else if (!stringActive) {
+                        if (!newLine) {
+                            result += newLineString;
+                        }
+                        inArray = true;
+                        result += indentString.repeat(openLists);
+                        openLists += 1;
+                        newLine = false;
+                    }
+                    result += text.charAt(i);
                     break;
                 case ')':
-                    openLists -= 1;
+                    if (charEscaped) {
+                        charEscaped = false;
+                    }
+                    else if (!stringActive) {
+                        openLists -= 1;
+                    }
                     result += text.charAt(i);
                     break;
                 case '\n':
                 case '\r':
                     newLine = true;
                     result += text.charAt(i);
+                    inArray = false;
+                    commentActive = false;
                     break;
                 case ' ':
                 case '\t':
+                    if (inArray || commentActive || stringActive) {
+                        result += text.charAt(i);
+                    }
+                    break;
+                case ';':
+                    if (charEscaped) {
+                        charEscaped = false;
+                    }
+                    else if (!stringActive) {
+                        commentActive = true;
+                    }
+                    result += text.charAt(i);
+                    break;
+                case '"':
+                    if (charEscaped) {
+                        charEscaped = false;
+                    } else {
+                        stringActive = !stringActive;
+                    }
+                    result += text.charAt(i);
+                    break;
+                case '\\':
+                    charEscaped = !charEscaped;
                     result += text.charAt(i);
                     break;
             
                 default:
+                    if (charEscaped) {
+                        charEscaped = false;
+                    }
                     result += text.charAt(i);
                     newLine = false;
             }
