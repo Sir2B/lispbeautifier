@@ -10,7 +10,9 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"onCommand:extension.helloWorld",
+		"onCommand:extension.formatlisp",
+		"onLanguage:lisp"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
