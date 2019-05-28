@@ -35,4 +35,17 @@ suite("Extension Tests", function () {
 
         assert.equal(result, formattedResult);
     });
+
+    test("WhenASemicolonIsAtFront_ThenDoNotFormatIt", function() {
+        const unformattedCode: string = ';(defun square (x)(* x x))';
+        const formattedResult: string = ';(defun square (x)(* x x))';
+        const options = {
+            indentString: '\t',
+            newLineString: '\n'
+        };
+
+        const result: string = formatter.formatText(unformattedCode, options);
+
+        assert.equal(result, formattedResult);
+    });
 });
