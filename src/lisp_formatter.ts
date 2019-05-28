@@ -48,7 +48,7 @@ export class LispFormatter implements DocumentFormattingEditProvider {
                     if (charEscaped) {
                         charEscaped = false;
                     }
-                    else if (!stringActive) {
+                    else if (!stringActive && !commentActive) {
                         if (!newLine) {
                             result += config.newLineString;
                         }
