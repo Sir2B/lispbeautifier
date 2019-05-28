@@ -1,7 +1,7 @@
-import { 
-    DocumentFormattingEditProvider, 
-    TextDocument, 
-    FormattingOptions, 
+import {
+    DocumentFormattingEditProvider,
+    TextDocument,
+    FormattingOptions,
     CancellationToken,
     ProviderResult,
     TextEdit,
@@ -12,13 +12,28 @@ import {
 
 export class LispFormatter implements DocumentFormattingEditProvider {
     provideDocumentFormattingEdits(
-            document: TextDocument, 
-            options: FormattingOptions, 
-            token: CancellationToken
-        ): ProviderResult<TextEdit[]> {
-        
+        document: TextDocument,
+        options: FormattingOptions,
+        token: CancellationToken
+    ): ProviderResult<TextEdit[]> {
+
         const text = document.getText();
-        let indentation = 0;
+
+        const formatConfig = { indentString: '', newLineString: ''};
+        if (options.insertSpaces) {
+            formatConfig.indentString = " ".repeat(options.tabSize);
+        } else {
+            formatConfig.indentString = "\t";
+        }
+        formatConfig.newLineString = document.eol === EndOfLine.CRLF ? "\r\n" : "\n";
+
+        const result: string = this.formatText(text, formatConfig);
+
+        return [TextEdit.replace(this.getFullDocRange(document), result)];
+    }
+
+    public formatText(unformattedText: string, config: any) {
+        // let indentation = 0;
         let openLists = 0;
         let result = "";
         let newLine = true;
@@ -27,31 +42,22 @@ export class LispFormatter implements DocumentFormattingEditProvider {
         let stringActive = false;
         let charEscaped = false;
 
-        let newLineString = document.eol === EndOfLine.CRLF ? "\r\n" : "\n";
-
-        let indentString;
-        if (options.insertSpaces) {
-            indentString = " ".repeat(options.tabSize);
-        } else {
-            indentString = "\t";
-        }
-
-        for (var i = 0; i < text.length; i++) {
-            switch (text.charAt(i)) {
+        for (var i = 0; i < unformattedText.length; i++) {
+            switch (unformattedText.charAt(i)) {
                 case '(':
                     if (charEscaped) {
                         charEscaped = false;
                     }
                     else if (!stringActive) {
                         if (!newLine) {
-                            result += newLineString;
+                            result += config.newLineString;
                         }
                         inArray = true;
-                        result += indentString.repeat(openLists);
+                        result += config.indentString.repeat(openLists);
                         openLists += 1;
                         newLine = false;
                     }
-                    result += text.charAt(i);
+                    result += unformattedText.charAt(i);
                     break;
                 case ')':
                     if (charEscaped) {
@@ -60,19 +66,19 @@ export class LispFormatter implements DocumentFormattingEditProvider {
                     else if (!stringActive) {
                         openLists -= 1;
                     }
-                    result += text.charAt(i);
+                    result += unformattedText.charAt(i);
                     break;
                 case '\n':
                 case '\r':
                     newLine = true;
-                    result += text.charAt(i);
+                    result += unformattedText.charAt(i);
                     inArray = false;
                     commentActive = false;
                     break;
                 case ' ':
                 case '\t':
                     if (inArray || commentActive || stringActive) {
-                        result += text.charAt(i);
+                        result += unformattedText.charAt(i);
                     }
                     break;
                 case ';':
@@ -82,7 +88,7 @@ export class LispFormatter implements DocumentFormattingEditProvider {
                     else if (!stringActive) {
                         commentActive = true;
                     }
-                    result += text.charAt(i);
+                    result += unformattedText.charAt(i);
                     break;
                 case '"':
                     if (charEscaped) {
@@ -90,24 +96,22 @@ export class LispFormatter implements DocumentFormattingEditProvider {
                     } else {
                         stringActive = !stringActive;
                     }
-                    result += text.charAt(i);
+                    result += unformattedText.charAt(i);
                     break;
                 case '\\':
                     charEscaped = !charEscaped;
-                    result += text.charAt(i);
+                    result += unformattedText.charAt(i);
                     break;
-            
+
                 default:
                     if (charEscaped) {
                         charEscaped = false;
                     }
-                    result += text.charAt(i);
+                    result += unformattedText.charAt(i);
                     newLine = false;
             }
         }
-
-        // throw new Error("Method not implemented.");
-        return [TextEdit.replace(this.getFullDocRange(document), result)];
+        return result;
     }
 
     /**
