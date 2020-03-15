@@ -10,4 +10,6 @@ jobs:
         with:
           node-version: '10.x'
       - run: npm install
-      - run: npm test
+      - run: npm test -- --verbose
+    env:
+      DISPLAY: ':99.0'
