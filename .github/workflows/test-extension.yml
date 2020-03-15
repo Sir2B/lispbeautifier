@@ -10,6 +10,6 @@ jobs:
         with:
           node-version: '10.x'
       - run: npm install
-      - run: npm test -- --verbose
-    env:
-      DISPLAY: ':99.0'
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm test -- --verbose
